@@ -127,11 +127,20 @@
   color: var(--color-text);
 }
 
-/* ─── Landing ─── */
+/* ─── Landing (problem statement + benefit-driven) ─── */
 .landing {
   padding: var(--space-5) var(--space-3);
   max-width: var(--text-max-width);
   margin: 0 auto;
+}
+
+.landing__problem {
+  font-size: var(--text-caption-size);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text);
+  opacity: 0.7;
+  margin: 0 0 var(--space-2) 0;
 }
 
 .landing .heading-1 {
@@ -139,11 +148,20 @@
 }
 
 .landing .subtext {
-  margin-bottom: var(--space-4);
+  margin-bottom: 0;
+}
+
+.landing__benefit {
+  font-size: var(--text-body-size);
+  line-height: var(--line-height-body-lg);
+  color: var(--color-text);
+  opacity: 0.9;
+  margin: var(--space-2) 0 var(--space-4) 0;
+  max-width: var(--text-max-width);
 }
 
 .landing__cta {
-  margin-top: var(--space-3);
+  margin-top: var(--space-4);
 }
 
 /* ─── Cards ─── */
@@ -292,4 +310,12 @@
 
 .empty-state__action {
   margin-top: var(--space-2);
+}
+
+.empty-state--premium {
+  padding: var(--space-5) var(--space-4);
+}
+
+.empty-state--premium .empty-state__body {
+  margin-bottom: 0;
 }

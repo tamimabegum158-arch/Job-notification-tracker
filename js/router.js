@@ -30,8 +30,10 @@
   function renderLanding() {
     return (
       '<section class="route-content landing">' +
-      '<h1 class="heading-1">Stop Missing The Right Jobs.</h1>' +
-      '<p class="subtext">Precision-matched job discovery delivered daily at 9AM.</p>' +
+      '<p class="landing__problem">The problem</p>' +
+      '<h1 class="heading-1">Job boards are noisy. The right role gets buried.</h1>' +
+      '<p class="subtext">You waste time scrolling and still miss matches that fit.</p>' +
+      '<p class="landing__benefit">We surface precision-matched roles and deliver a short list to you every morning at 9AM—so you see the right jobs first, without the clutter.</p>' +
       '<p class="landing__cta">' +
       '<a href="/settings" class="btn btn--primary">Start Tracking</a>' +
       "</p>" +
@@ -42,9 +44,9 @@
   function renderSettings() {
     return (
       '<section class="route-content">' +
-      '<h1 class="heading-1">Settings</h1>' +
-      '<p class="subtext">Set your preferences below. No logic or saving yet.</p>' +
-      '<div class="card" style="margin-top: var(--space-4); max-width: 560px;">' +
+      '<h1 class="heading-1">What are you looking for?</h1>' +
+      '<p class="subtext">Tell us your preferences so we can match you to the right roles. Your answers are used only to personalize your feed.</p>' +
+      '<div class="card settings-card" style="margin-top: var(--space-4); max-width: 560px;">' +
       '<div class="form-group">' +
       '<label class="form-group__label" for="role-keywords">Role keywords</label>' +
       '<input type="text" id="role-keywords" class="input" placeholder="e.g. Frontend, React, Product Manager" />' +
@@ -81,9 +83,10 @@
     return (
       '<section class="route-content">' +
       '<h1 class="heading-1">Dashboard</h1>' +
-      '<div class="empty-state" style="margin-top: var(--space-4);">' +
-      '<p class="empty-state__title">No jobs yet.</p>' +
-      '<p class="empty-state__body">In the next step, you will load a realistic dataset.</p>' +
+      '<p class="subtext">Your matched jobs in one place.</p>' +
+      '<div class="empty-state empty-state--premium" style="margin-top: var(--space-4);">' +
+      '<p class="empty-state__title">No jobs yet</p>' +
+      '<p class="empty-state__body">Once you set your preferences and we load your feed, precision-matched roles will appear here. No clutter—only roles that fit.</p>' +
       "</div>" +
       "</section>"
     );
@@ -93,9 +96,10 @@
     return (
       '<section class="route-content">' +
       '<h1 class="heading-1">Saved</h1>' +
-      '<div class="empty-state" style="margin-top: var(--space-4);">' +
-      '<p class="empty-state__title">No saved jobs</p>' +
-      '<p class="empty-state__body">Jobs you save for later will appear here.</p>' +
+      '<p class="subtext">Jobs you want to revisit later.</p>' +
+      '<div class="empty-state empty-state--premium" style="margin-top: var(--space-4);">' +
+      '<p class="empty-state__title">No saved jobs yet</p>' +
+      '<p class="empty-state__body">Save any job from your dashboard to find it here. Useful when you want to compare a few roles or apply later.</p>' +
       "</div>" +
       "</section>"
     );
@@ -105,9 +109,10 @@
     return (
       '<section class="route-content">' +
       '<h1 class="heading-1">Digest</h1>' +
-      '<div class="empty-state" style="margin-top: var(--space-4);">' +
-      '<p class="empty-state__title">Daily summary</p>' +
-      '<p class="empty-state__body">Your daily job digest will be available here. This feature will be built in a later step.</p>' +
+      '<p class="subtext">Your daily summary, delivered at 9AM.</p>' +
+      '<div class="empty-state empty-state--premium" style="margin-top: var(--space-4);">' +
+      '<p class="empty-state__title">Daily digest coming soon</p>' +
+      '<p class="empty-state__body">We will send you a short, curated list of new matches every morning—so you see the right jobs first without opening multiple tabs.</p>' +
       "</div>" +
       "</section>"
     );
@@ -117,7 +122,7 @@
     return (
       '<section class="route-content">' +
       '<h1 class="heading-1">Proof</h1>' +
-      '<p class="subtext">Placeholder for artifact collection. This section will be built in the next step.</p>' +
+      '<p class="subtext">Artifact collection and delivery proof. This section will be built in the next step.</p>' +
       "</section>"
     );
   }
