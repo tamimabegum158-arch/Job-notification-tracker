@@ -10,7 +10,9 @@
     "/settings": { title: "Settings" },
     "/saved": { title: "Saved" },
     "/digest": { title: "Digest" },
-    "/proof": { title: "Proof" }
+    "/proof": { title: "Proof" },
+    "/jt/07-test": { title: "Test Checklist" },
+    "/jt/08-ship": { title: "Ship" }
   };
 
   function getPath() {
@@ -45,35 +47,46 @@
     return (
       '<section class="route-content">' +
       '<h1 class="heading-1">What are you looking for?</h1>' +
-      '<p class="subtext">Tell us your preferences so we can match you to the right roles. Your answers are used only to personalize your feed.</p>' +
+      '<p class="subtext">Tell us your preferences so we can match you to the right roles. Saved to this device only.</p>' +
       '<div class="card settings-card" style="margin-top: var(--space-4); max-width: 560px;">' +
       '<div class="form-group">' +
-      '<label class="form-group__label" for="role-keywords">Role keywords</label>' +
-      '<input type="text" id="role-keywords" class="input" placeholder="e.g. Frontend, React, Product Manager" />' +
+      '<label class="form-group__label" for="pref-roleKeywords">Role keywords</label>' +
+      '<input type="text" id="pref-roleKeywords" class="input" placeholder="e.g. React, Frontend, Product Manager" />' +
       "</div>" +
       '<div class="form-group">' +
-      '<label class="form-group__label" for="locations">Preferred locations</label>' +
-      '<input type="text" id="locations" class="input" placeholder="e.g. New York, London, Remote" />' +
+      '<label class="form-group__label" for="pref-preferredLocations">Preferred locations</label>' +
+      '<select id="pref-preferredLocations" class="input select" multiple></select>' +
       "</div>" +
       '<div class="form-group">' +
-      '<label class="form-group__label" for="mode">Mode</label>' +
-      '<select id="mode" class="input select">' +
-      '<option value="">Select</option>' +
-      '<option value="remote">Remote</option>' +
-      '<option value="hybrid">Hybrid</option>' +
-      '<option value="onsite">Onsite</option>' +
+      '<span class="form-group__label">Preferred mode</span>' +
+      '<div class="checkbox-group">' +
+      '<label class="checkbox-group__item"><input type="checkbox" name="pref-preferredMode" value="Remote" /> Remote</label>' +
+      '<label class="checkbox-group__item"><input type="checkbox" name="pref-preferredMode" value="Hybrid" /> Hybrid</label>' +
+      '<label class="checkbox-group__item"><input type="checkbox" name="pref-preferredMode" value="Onsite" /> Onsite</label>' +
+      "</div>" +
+      "</div>" +
+      '<div class="form-group">' +
+      '<label class="form-group__label" for="pref-experienceLevel">Experience level</label>' +
+      '<select id="pref-experienceLevel" class="input select">' +
+      '<option value="">Any</option>' +
+      '<option value="Fresher">Fresher</option>' +
+      '<option value="0-1">0-1</option>' +
+      '<option value="1-3">1-3</option>' +
+      '<option value="3-5">3-5</option>' +
       "</select>" +
       "</div>" +
       '<div class="form-group">' +
-      '<label class="form-group__label" for="experience">Experience level</label>' +
-      '<select id="experience" class="input select">' +
-      '<option value="">Select</option>' +
-      '<option value="entry">Entry</option>' +
-      '<option value="mid">Mid</option>' +
-      '<option value="senior">Senior</option>' +
-      '<option value="lead">Lead</option>' +
-      "</select>" +
+      '<label class="form-group__label" for="pref-skills">Skills</label>' +
+      '<input type="text" id="pref-skills" class="input" placeholder="e.g. JavaScript, Python, SQL" />' +
       "</div>" +
+      '<div class="form-group">' +
+      '<label class="form-group__label" for="pref-minMatchScore">Minimum match score (0–100)</label>' +
+      '<div class="slider-group">' +
+      '<input type="range" id="pref-minMatchScore" min="0" max="100" value="40" />' +
+      '<p class="slider-group__value" id="pref-minMatchScore-value">40</p>' +
+      "</div>" +
+      "</div>" +
+      '<p style="margin-top: var(--space-3);"><button type="button" class="btn btn--primary" id="pref-save">Save preferences</button></p>' +
       "</div>" +
       "</section>"
     );
@@ -84,6 +97,7 @@
       '<section class="route-content">' +
       '<h1 class="heading-1">Dashboard</h1>' +
       '<p class="subtext">Your matched jobs in one place.</p>' +
+      '<div id="preferences-banner" class="preferences-banner" style="display: none;">Set your preferences to activate intelligent matching.</div>' +
       '<div class="filter-bar">' +
       '<div class="form-group form-group--search">' +
       '<label class="form-group__label" for="filter-keyword">Keyword</label>' +
@@ -114,9 +128,20 @@
       '<div class="form-group">' +
       '<label class="form-group__label" for="filter-sort">Sort</label>' +
       '<select id="filter-sort" class="input select">' +
-      '<option value="latest">Latest</option><option value="oldest">Oldest</option>' +
+      '<option value="latest">Latest</option><option value="oldest">Oldest</option><option value="match">Match Score</option><option value="salary">Salary</option>' +
       "</select>" +
       "</div>" +
+      '<div class="form-group">' +
+      '<label class="form-group__label" for="filter-status">Status</label>' +
+      '<select id="filter-status" class="input select">' +
+      '<option value="">All</option><option value="Not Applied">Not Applied</option><option value="Applied">Applied</option><option value="Rejected">Rejected</option><option value="Selected">Selected</option>' +
+      "</select>" +
+      "</div>" +
+      '<div class="filter-bar__actions"><button type="button" class="btn btn--secondary btn--small" id="filter-clear">Clear filters</button></div>' +
+      "</div>" +
+      '<div class="dashboard-toggle">' +
+      '<input type="checkbox" id="filter-only-above-threshold" />' +
+      '<label for="filter-only-above-threshold">Show only jobs above my threshold</label>' +
       "</div>" +
       '<div id="job-cards-container" class="job-cards-grid"></div>' +
       "</section>"
@@ -138,10 +163,8 @@
       '<section class="route-content">' +
       '<h1 class="heading-1">Digest</h1>' +
       '<p class="subtext">Your daily summary, delivered at 9AM.</p>' +
-      '<div class="empty-state empty-state--premium" style="margin-top: var(--space-4);">' +
-      '<p class="empty-state__title">Daily digest coming soon</p>' +
-      '<p class="empty-state__body">We will send you a short, curated list of new matches every morning—so you see the right jobs first without opening multiple tabs.</p>' +
-      "</div>" +
+      '<p class="digest-simulation-note">Demo Mode: Daily 9AM trigger simulated manually.</p>' +
+      '<div id="digest-root"></div>' +
       "</section>"
     );
   }
@@ -152,6 +175,39 @@
       '<h1 class="heading-1">Proof</h1>' +
       '<p class="subtext">Artifact collection and delivery proof. This section will be built in the next step.</p>' +
       "</section>"
+    );
+  }
+
+  function renderTestChecklist() {
+    return (
+      '<section class="route-content test-checklist-route">' +
+      '<h1 class="heading-1">Test Checklist</h1>' +
+      '<p class="subtext">Verify all items before shipping.</p>' +
+      '<div id="test-summary" class="test-summary">Tests Passed: 0 / 10</div>' +
+      '<p id="test-warning" class="test-warning" style="display: none;">Resolve all issues before shipping.</p>' +
+      '<div class="test-checklist-card card">' +
+      '<ul id="test-checklist-list" class="test-checklist-list" aria-label="Test checklist"></ul>' +
+      '<p style="margin-top: var(--space-3);">' +
+      '<button type="button" class="btn btn--secondary btn--small" id="test-reset-btn">Reset Test Status</button>' +
+      '</p>' +
+      '</div>' +
+      '</section>'
+    );
+  }
+
+  function renderShip() {
+    return (
+      '<section class="route-content ship-route">' +
+      '<h1 class="heading-1">Ship</h1>' +
+      '<p class="subtext">Release readiness.</p>' +
+      '<div id="ship-locked" class="ship-locked card">' +
+      '<p class="ship-locked__message">Complete all tests before shipping.</p>' +
+      '<p><a href="/jt/07-test" class="btn btn--primary btn--small">Go to Test Checklist</a></p>' +
+      '</div>' +
+      '<div id="ship-unlocked" class="ship-unlocked card" style="display: none;">' +
+      '<p class="ship-unlocked__message">All tests passed. Ready to ship.</p>' +
+      '</div>' +
+      '</section>'
     );
   }
 
@@ -170,7 +226,9 @@
     "/settings": renderSettings,
     "/saved": renderSaved,
     "/digest": renderDigest,
-    "/proof": renderProof
+    "/proof": renderProof,
+    "/jt/07-test": renderTestChecklist,
+    "/jt/08-ship": renderShip
   };
 
   function updatePage(path) {
@@ -185,6 +243,10 @@
       outlet.innerHTML = render ? render() : "";
       if (pathNorm === "/dashboard" && window.initDashboard) window.initDashboard();
       if (pathNorm === "/saved" && window.initSaved) window.initSaved();
+      if (pathNorm === "/settings" && window.initSettings) window.initSettings();
+      if (pathNorm === "/digest" && window.initDigest) window.initDigest();
+      if (pathNorm === "/jt/07-test" && window.initTestChecklist) window.initTestChecklist();
+      if (pathNorm === "/jt/08-ship" && window.initShip) window.initShip();
     } else {
       document.title = "Page Not Found — Job Notification Tracker";
       outlet.innerHTML = render404();
