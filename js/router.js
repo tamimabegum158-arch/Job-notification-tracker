@@ -154,10 +154,8 @@
       '<section class="route-content">' +
       '<h1 class="heading-1">Digest</h1>' +
       '<p class="subtext">Your daily summary, delivered at 9AM.</p>' +
-      '<div class="empty-state empty-state--premium" style="margin-top: var(--space-4);">' +
-      '<p class="empty-state__title">Daily digest coming soon</p>' +
-      '<p class="empty-state__body">We will send you a short, curated list of new matches every morning—so you see the right jobs first without opening multiple tabs.</p>' +
-      "</div>" +
+      '<p class="digest-simulation-note">Demo Mode: Daily 9AM trigger simulated manually.</p>' +
+      '<div id="digest-root"></div>' +
       "</section>"
     );
   }
@@ -202,6 +200,7 @@
       if (pathNorm === "/dashboard" && window.initDashboard) window.initDashboard();
       if (pathNorm === "/saved" && window.initSaved) window.initSaved();
       if (pathNorm === "/settings" && window.initSettings) window.initSettings();
+      if (pathNorm === "/digest" && window.initDigest) window.initDigest();
     } else {
       document.title = "Page Not Found — Job Notification Tracker";
       outlet.innerHTML = render404();

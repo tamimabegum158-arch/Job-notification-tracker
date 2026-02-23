@@ -42,6 +42,79 @@
     } catch (e) {}
   }
 
+  var DIGEST_KEY_PREFIX = "jobTrackerDigest_";
+
+  function getTodayKey() {
+    var d = new Date();
+    var y = d.getFullYear();
+    var m = d.getMonth() + 1;
+    var day = d.getDate();
+    return y + "-" + (m < 10 ? "0" : "") + m + "-" + (day < 10 ? "0" : "") + day;
+  }
+
+  function getDigest(dateKey) {
+    try {
+      var raw = localStorage.getItem(DIGEST_KEY_PREFIX + dateKey);
+      if (!raw) return null;
+      var data = JSON.parse(raw);
+      if (!data || !Array.isArray(data.jobs)) return null;
+      return data;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function setDigest(dateKey, data) {
+    try {
+      localStorage.setItem(DIGEST_KEY_PREFIX + dateKey, JSON.stringify(data));
+    } catch (e) {}
+  }
+
+  function formatDigestDate(dateKey) {
+    var parts = dateKey.split("-");
+    if (parts.length !== 3) return dateKey;
+    var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    var mi = parseInt(parts[1], 10) - 1;
+    var month = months[mi] || parts[1];
+    return month + " " + parseInt(parts[2], 10) + ", " + parts[0];
+  }
+
+  /**
+   * Top 10 jobs by matchScore desc, then postedDaysAgo asc. Returns snapshot for storage.
+   */
+  function generateDigest() {
+    var prefs = getPreferences();
+    if (!prefs) return null;
+    var jobs = getJobs();
+    var withScore = jobs.slice().map(function (j) {
+      return { job: j, score: computeMatchScore(j, prefs) };
+    });
+    var minScore = prefs.minMatchScore != null ? prefs.minMatchScore : 40;
+    withScore = withScore.filter(function (x) { return x.score >= minScore; });
+    withScore.sort(function (a, b) {
+      if (b.score !== a.score) return b.score - a.score;
+      var da = a.job.postedDaysAgo != null ? a.job.postedDaysAgo : 99;
+      var db = b.job.postedDaysAgo != null ? b.job.postedDaysAgo : 99;
+      return da - db;
+    });
+    var top10 = withScore.slice(0, 10).map(function (x) {
+      var j = x.job;
+      return {
+        id: j.id,
+        title: j.title || "",
+        company: j.company || "",
+        location: j.location || "",
+        experience: j.experience || "",
+        matchScore: x.score,
+        applyUrl: j.applyUrl || ""
+      };
+    });
+    var todayKey = getTodayKey();
+    var data = { date: todayKey, dateLabel: formatDigestDate(todayKey), jobs: top10 };
+    setDigest(todayKey, data);
+    return data;
+  }
+
   /**
    * Match score (cap 100): +25 title keyword, +15 desc keyword, +15 location, +10 mode, +10 experience,
    * +15 skills overlap, +5 postedDaysAgo<=2, +5 source LinkedIn.
@@ -497,9 +570,127 @@
     }
   }
 
+  function buildDigestPlainText(data) {
+    if (!data || !data.jobs || !data.jobs.length) return "";
+    var lines = ["Top 10 Jobs For You — 9AM Digest", data.dateLabel || data.date, ""];
+    data.jobs.forEach(function (j, idx) {
+      lines.push((idx + 1) + ". " + (j.title || "") + " — " + (j.company || ""));
+      lines.push("   " + (j.location || "") + " · " + (j.experience || "") + " · Match: " + (j.matchScore != null ? j.matchScore : 0) + "%");
+      lines.push("");
+    });
+    lines.push("This digest was generated based on your preferences.");
+    return lines.join("\n");
+  }
+
+  function renderDigestContent(digestData) {
+    if (!digestData || !digestData.jobs || !digestData.jobs.length) return "";
+    var dateLabel = digestData.dateLabel || digestData.date || "";
+    var jobsHtml = digestData.jobs.map(function (j) {
+      var meta = [j.location, j.experience].filter(Boolean).join(" · ") || "—";
+      return (
+        '<div class="digest-job">' +
+        '<p class="digest-job__title">' + escapeHtml(j.title) + "</p>" +
+        '<p class="digest-job__meta">' + escapeHtml(j.company) + " · " + escapeHtml(meta) + "</p>" +
+        '<p class="digest-job__score">Match: ' + (j.matchScore != null ? j.matchScore : 0) + "%</p>" +
+        (j.applyUrl ? '<a href="' + escapeHtml(j.applyUrl) + '" target="_blank" rel="noopener" class="btn btn--primary btn--small">Apply</a>' : "") +
+        "</div>"
+      );
+    }).join("");
+    return (
+      '<div class="digest-card">' +
+      '<div class="digest-card__header">' +
+      '<h2 class="digest-card__title">Top 10 Jobs For You — 9AM Digest</h2>' +
+      '<p class="digest-card__date">' + escapeHtml(dateLabel) + "</p>" +
+      "</div>" +
+      jobsHtml +
+      '<div class="digest-card__footer">This digest was generated based on your preferences.</div>' +
+      "</div>" +
+      '<div class="digest-actions">' +
+      '<button type="button" class="btn btn--secondary" id="digest-copy">Copy Digest to Clipboard</button>' +
+      '<a href="mailto:?subject=My%209AM%20Job%20Digest" id="digest-mailto" class="btn btn--secondary">Create Email Draft</a>' +
+      "</div>"
+    );
+  }
+
+  function initDigest() {
+    var root = document.getElementById("digest-root");
+    if (!root) return;
+    var prefs = getPreferences();
+    if (!prefs) {
+      root.innerHTML = '<div class="empty-state empty-state--premium digest-block">' +
+        '<p class="empty-state__title">Set preferences to generate a personalized digest.</p>' +
+        '<p class="empty-state__body">Go to Settings to add your role keywords, locations, and skills. Then return here to generate your daily digest.</p>' +
+        "</div>";
+      return;
+    }
+    var todayKey = getTodayKey();
+    var existing = getDigest(todayKey);
+    var digestData = null;
+
+    function updateUI() {
+      if (digestData && digestData.jobs && digestData.jobs.length > 0) {
+        root.innerHTML = '<div class="digest-block">' +
+          '<button type="button" class="btn btn--primary" id="digest-generate">Generate Today\'s 9AM Digest (Simulated)</button>' +
+          '<div id="digest-content">' + renderDigestContent(digestData) + "</div>" +
+          "</div>";
+        var copyBtn = document.getElementById("digest-copy");
+        var mailtoLink = document.getElementById("digest-mailto");
+        if (copyBtn) {
+          copyBtn.addEventListener("click", function () {
+            var text = buildDigestPlainText(digestData);
+            if (text && navigator.clipboard && navigator.clipboard.writeText) {
+              navigator.clipboard.writeText(text).then(function () { copyBtn.textContent = "Copied"; setTimeout(function () { copyBtn.textContent = "Copy Digest to Clipboard"; }, 2000); }).catch(function () {});
+            }
+          });
+        }
+        if (mailtoLink) {
+          var body = buildDigestPlainText(digestData);
+          mailtoLink.href = "mailto:?subject=" + encodeURIComponent("My 9AM Job Digest") + "&body=" + encodeURIComponent(body);
+        }
+        var genBtn = document.getElementById("digest-generate");
+        if (genBtn) genBtn.addEventListener("click", onGenerate);
+        return;
+      }
+      if (digestData && digestData.jobs && digestData.jobs.length === 0) {
+        root.innerHTML = '<div class="digest-block">' +
+          '<button type="button" class="btn btn--primary" id="digest-generate">Generate Today\'s 9AM Digest (Simulated)</button>' +
+          '<div class="empty-state empty-state--premium" style="margin-top: var(--space-3);">' +
+          '<p class="empty-state__title">No matching roles today.</p>' +
+          '<p class="empty-state__body">Check again tomorrow.</p>' +
+          "</div></div>";
+      } else {
+        root.innerHTML = '<div class="digest-block">' +
+          '<button type="button" class="btn btn--primary" id="digest-generate">Generate Today\'s 9AM Digest (Simulated)</button>' +
+          '<div id="digest-content"></div></div>';
+      }
+      var genBtn = document.getElementById("digest-generate");
+      if (genBtn) genBtn.addEventListener("click", onGenerate);
+    }
+
+    function onGenerate() {
+      existing = getDigest(todayKey);
+      if (existing && existing.jobs && existing.jobs.length > 0) {
+        digestData = existing;
+        updateUI();
+        return;
+      }
+      digestData = generateDigest();
+      if (digestData && digestData.jobs && digestData.jobs.length === 0) {
+        setDigest(todayKey, digestData);
+      }
+      updateUI();
+    }
+
+    if (existing && existing.jobs && existing.jobs.length > 0) {
+      digestData = existing;
+    }
+    updateUI();
+  }
+
   window.initDashboard = initDashboard;
   window.initSaved = initSaved;
   window.initSettings = initSettings;
+  window.initDigest = initDigest;
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", bindModalClose);
