@@ -10,7 +10,9 @@
     "/settings": { title: "Settings" },
     "/saved": { title: "Saved" },
     "/digest": { title: "Digest" },
-    "/proof": { title: "Proof" }
+    "/proof": { title: "Proof" },
+    "/jt/07-test": { title: "Test Checklist" },
+    "/jt/08-ship": { title: "Ship" }
   };
 
   function getPath() {
@@ -176,6 +178,39 @@
     );
   }
 
+  function renderTestChecklist() {
+    return (
+      '<section class="route-content test-checklist-route">' +
+      '<h1 class="heading-1">Test Checklist</h1>' +
+      '<p class="subtext">Verify all items before shipping.</p>' +
+      '<div id="test-summary" class="test-summary">Tests Passed: 0 / 10</div>' +
+      '<p id="test-warning" class="test-warning" style="display: none;">Resolve all issues before shipping.</p>' +
+      '<div class="test-checklist-card card">' +
+      '<ul id="test-checklist-list" class="test-checklist-list" aria-label="Test checklist"></ul>' +
+      '<p style="margin-top: var(--space-3);">' +
+      '<button type="button" class="btn btn--secondary btn--small" id="test-reset-btn">Reset Test Status</button>' +
+      '</p>' +
+      '</div>' +
+      '</section>'
+    );
+  }
+
+  function renderShip() {
+    return (
+      '<section class="route-content ship-route">' +
+      '<h1 class="heading-1">Ship</h1>' +
+      '<p class="subtext">Release readiness.</p>' +
+      '<div id="ship-locked" class="ship-locked card">' +
+      '<p class="ship-locked__message">Complete all tests before shipping.</p>' +
+      '<p><a href="/jt/07-test" class="btn btn--primary btn--small">Go to Test Checklist</a></p>' +
+      '</div>' +
+      '<div id="ship-unlocked" class="ship-unlocked card" style="display: none;">' +
+      '<p class="ship-unlocked__message">All tests passed. Ready to ship.</p>' +
+      '</div>' +
+      '</section>'
+    );
+  }
+
   function render404() {
     return (
       '<section class="route-content">' +
@@ -191,7 +226,9 @@
     "/settings": renderSettings,
     "/saved": renderSaved,
     "/digest": renderDigest,
-    "/proof": renderProof
+    "/proof": renderProof,
+    "/jt/07-test": renderTestChecklist,
+    "/jt/08-ship": renderShip
   };
 
   function updatePage(path) {
@@ -208,6 +245,8 @@
       if (pathNorm === "/saved" && window.initSaved) window.initSaved();
       if (pathNorm === "/settings" && window.initSettings) window.initSettings();
       if (pathNorm === "/digest" && window.initDigest) window.initDigest();
+      if (pathNorm === "/jt/07-test" && window.initTestChecklist) window.initTestChecklist();
+      if (pathNorm === "/jt/08-ship" && window.initShip) window.initShip();
     } else {
       document.title = "Page Not Found — Job Notification Tracker";
       outlet.innerHTML = render404();

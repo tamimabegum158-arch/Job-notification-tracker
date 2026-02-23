@@ -862,3 +862,83 @@
   font-size: 0.75rem;
   opacity: 0.75;
 }
+
+/* ─── Test Checklist ─── */
+.test-summary {
+  font-size: var(--text-body-size-lg);
+  font-weight: 600;
+  margin: var(--space-3) 0 var(--space-1) 0;
+  color: var(--color-text);
+}
+
+.test-warning {
+  font-size: var(--text-body-size);
+  color: var(--color-warning);
+  margin: 0 0 var(--space-3) 0;
+}
+
+.test-checklist-card {
+  max-width: var(--text-max-width);
+  margin-top: var(--space-2);
+}
+
+.test-checklist-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.test-checklist-item {
+  margin-bottom: var(--space-2);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.test-checklist-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.test-checklist-item__label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-body-size);
+  cursor: pointer;
+}
+
+.test-checklist-item__label input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-accent);
+  flex-shrink: 0;
+}
+
+.test-checklist-item__text {
+  flex: 1;
+}
+
+.test-checklist-item__tooltip {
+  font-size: var(--text-caption-size);
+  color: var(--color-text);
+  opacity: 0.65;
+  cursor: help;
+}
+
+/* ─── Ship (locked / unlocked) ─── */
+.ship-locked,
+.ship-unlocked {
+  max-width: var(--text-max-width);
+  margin-top: var(--space-3);
+}
+
+.ship-locked__message,
+.ship-unlocked__message {
+  font-size: var(--text-body-size);
+  margin: 0 0 var(--space-2) 0;
+  color: var(--color-text);
+}
+
+.ship-unlocked__message {
+  color: var(--color-success);
+}
