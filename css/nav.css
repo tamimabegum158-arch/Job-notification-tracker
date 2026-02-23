@@ -3,6 +3,21 @@
  * Active link: deep red underline. No flashy hover. No heavy shadows.
  */
 
+.top-bar__name--link {
+  text-decoration: none;
+  color: inherit;
+  transition: opacity var(--transition-duration) var(--transition-ease);
+}
+
+.top-bar__name--link:hover {
+  opacity: 0.85;
+}
+
+.top-bar__name--link:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
 .top-bar__nav {
   display: flex;
   align-items: center;
