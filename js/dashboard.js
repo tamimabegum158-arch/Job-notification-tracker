@@ -1,10 +1,90 @@
 /**
- * Job Notification Tracker — dashboard and saved views.
- * Filtering, job cards, modal, localStorage for saved jobs.
+ * Job Notification Tracker — dashboard, saved views, preferences, match scoring.
  */
 
 (function () {
   var STORAGE_KEY = "job-notification-tracker-saved";
+  var PREFERENCES_KEY = "jobTrackerPreferences";
+
+  function defaultPreferences() {
+    return {
+      roleKeywords: [],
+      preferredLocations: [],
+      preferredMode: [],
+      experienceLevel: "",
+      skills: [],
+      minMatchScore: 40
+    };
+  }
+
+  function getPreferences() {
+    try {
+      var raw = localStorage.getItem(PREFERENCES_KEY);
+      if (!raw) return null;
+      var p = JSON.parse(raw);
+      if (!p || typeof p !== "object") return null;
+      return {
+        roleKeywords: Array.isArray(p.roleKeywords) ? p.roleKeywords : [],
+        preferredLocations: Array.isArray(p.preferredLocations) ? p.preferredLocations : [],
+        preferredMode: Array.isArray(p.preferredMode) ? p.preferredMode : [],
+        experienceLevel: p.experienceLevel || "",
+        skills: Array.isArray(p.skills) ? p.skills : [],
+        minMatchScore: typeof p.minMatchScore === "number" ? Math.max(0, Math.min(100, p.minMatchScore)) : 40
+      };
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function setPreferences(prefs) {
+    try {
+      localStorage.setItem(PREFERENCES_KEY, JSON.stringify(prefs));
+    } catch (e) {}
+  }
+
+  /**
+   * Match score (cap 100): +25 title keyword, +15 desc keyword, +15 location, +10 mode, +10 experience,
+   * +15 skills overlap, +5 postedDaysAgo<=2, +5 source LinkedIn.
+   */
+  function computeMatchScore(job, prefs) {
+    if (!prefs) return 0;
+    var score = 0;
+    var title = (job.title || "").toLowerCase();
+    var desc = (job.description || "").toLowerCase();
+    var roleKeywords = prefs.roleKeywords || [];
+    for (var i = 0; i < roleKeywords.length; i++) {
+      var kw = (roleKeywords[i] || "").trim().toLowerCase();
+      if (!kw) continue;
+      if (title.indexOf(kw) !== -1) { score += 25; break; }
+    }
+    for (var j = 0; j < roleKeywords.length; j++) {
+      var kw2 = (roleKeywords[j] || "").trim().toLowerCase();
+      if (!kw2) continue;
+      if (desc.indexOf(kw2) !== -1) { score += 15; break; }
+    }
+    var locs = prefs.preferredLocations || [];
+    if (locs.length && job.location && locs.indexOf(job.location) !== -1) score += 15;
+    var modes = prefs.preferredMode || [];
+    if (modes.length && job.mode && modes.indexOf(job.mode) !== -1) score += 10;
+    if (prefs.experienceLevel && job.experience === prefs.experienceLevel) score += 10;
+    var userSkills = prefs.skills || [];
+    var jobSkills = job.skills || [];
+    var skillMatch = false;
+    for (var s = 0; s < userSkills.length && !skillMatch; s++) {
+      var us = (userSkills[s] || "").trim().toLowerCase();
+      if (!us) continue;
+      for (var js = 0; js < jobSkills.length; js++) {
+        if ((jobSkills[js] || "").toLowerCase().indexOf(us) !== -1 || us.indexOf((jobSkills[js] || "").toLowerCase()) !== -1) {
+          skillMatch = true;
+          break;
+        }
+      }
+    }
+    if (skillMatch) score += 15;
+    if (job.postedDaysAgo != null && job.postedDaysAgo <= 2) score += 5;
+    if (job.source === "LinkedIn") score += 5;
+    return Math.min(100, score);
+  }
 
   function getSavedIds() {
     try {
@@ -48,7 +128,7 @@
     return Object.keys(set).sort();
   }
 
-  function filterAndSortJobs(jobs, filters) {
+  function filterAndSortJobs(jobs, filters, prefs) {
     var keyword = (filters.keyword || "").trim().toLowerCase();
     var list = jobs.filter(function (j) {
       if (keyword) {
@@ -62,8 +142,22 @@
       if (filters.source && j.source !== filters.source) return false;
       return true;
     });
+    prefs = prefs || getPreferences();
+    list.forEach(function (j) {
+      j._matchScore = computeMatchScore(j, prefs);
+    });
+    if (filters.onlyAboveThreshold && prefs) {
+      var minScore = prefs.minMatchScore != null ? prefs.minMatchScore : 40;
+      list = list.filter(function (j) { return j._matchScore >= minScore; });
+    }
     var sort = filters.sort || "latest";
     list.sort(function (a, b) {
+      if (sort === "match") return (b._matchScore || 0) - (a._matchScore || 0);
+      if (sort === "salary") {
+        var sa = extractSalaryNumber(a.salaryRange);
+        var sb = extractSalaryNumber(b.salaryRange);
+        return sb - sa;
+      }
       var da = a.postedDaysAgo != null ? a.postedDaysAgo : 99;
       var db = b.postedDaysAgo != null ? b.postedDaysAgo : 99;
       return sort === "oldest" ? db - da : da - db;
@@ -78,14 +172,38 @@
     var experienceEl = document.getElementById("filter-experience");
     var sourceEl = document.getElementById("filter-source");
     var sortEl = document.getElementById("filter-sort");
+    var thresholdEl = document.getElementById("filter-only-above-threshold");
     return {
       keyword: keywordEl ? keywordEl.value : "",
       location: locationEl ? locationEl.value : "",
       mode: modeEl ? modeEl.value : "",
       experience: experienceEl ? experienceEl.value : "",
       source: sourceEl ? sourceEl.value : "",
-      sort: sortEl ? sortEl.value : "latest"
+      sort: sortEl ? sortEl.value : "latest",
+      onlyAboveThreshold: thresholdEl ? thresholdEl.checked : false
     };
+  }
+
+  function extractSalaryNumber(salaryRange) {
+    if (!salaryRange || typeof salaryRange !== "string") return 0;
+    var s = salaryRange.trim();
+    var match = s.match(/(\d+)\s*[–\-]\s*(\d+)/);
+    if (match) {
+      var a = parseInt(match[1], 10);
+      var b = parseInt(match[2], 10);
+      if (s.indexOf("LPA") !== -1) return (a + b) / 2;
+      if (s.indexOf("k") !== -1 || s.indexOf("₹") !== -1) return (a + b) / 2;
+      return (a + b) / 2;
+    }
+    var single = s.match(/(\d+)/);
+    return single ? parseInt(single[1], 10) : 0;
+  }
+
+  function matchScoreBadgeClass(score) {
+    if (score >= 80) return "badge badge--match-high";
+    if (score >= 60) return "badge badge--match-mid";
+    if (score >= 40) return "badge badge--match-neutral";
+    return "badge badge--match-low";
   }
 
   function renderJobCard(job, options) {
@@ -95,7 +213,8 @@
     var saveLabel = isSaved ? "Saved" : "Save";
     var saveDisabled = isSaved ? " disabled" : "";
     var meta = [job.location, job.mode, job.experience].filter(Boolean).join(" · ") || "—";
-    var badgeClass = "badge";
+    var score = job._matchScore != null ? job._matchScore : 0;
+    var scoreBadge = options.hideMatchScore ? "" : ('<span class="' + matchScoreBadgeClass(score) + '">' + score + "% match</span>");
     return (
       '<div class="job-card" data-job-id="' + escapeHtml(job.id) + '">' +
       '<p class="job-card__title">' + escapeHtml(job.title) + "</p>" +
@@ -103,6 +222,7 @@
       '<p class="job-card__meta">' + escapeHtml(meta) + "</p>" +
       '<p class="job-card__salary">' + escapeHtml(job.salaryRange || "—") + "</p>" +
       '<div class="job-card__footer">' +
+      scoreBadge +
       '<span class="badge">' + escapeHtml(job.source || "—") + "</span>" +
       '<span class="job-card__posted">' + escapeHtml(postedLabel(job.postedDaysAgo)) + "</span>" +
       '<button type="button" class="btn btn--secondary btn--small" data-action="view">View</button>' +
@@ -148,13 +268,21 @@
 
   function refreshDashboardCards() {
     var container = document.getElementById("job-cards-container");
+    var banner = document.getElementById("preferences-banner");
     if (!container) return;
+    var prefs = getPreferences();
+    if (banner) {
+      banner.style.display = prefs ? "none" : "block";
+    }
     var jobs = getJobs();
     var filters = getFilters();
-    var list = filterAndSortJobs(jobs, filters);
+    var list = filterAndSortJobs(jobs, filters, prefs);
     if (list.length === 0) {
-      container.innerHTML = '<p class="no-results">No jobs match your search.</p>';
       container.classList.remove("job-cards-grid");
+      container.innerHTML = '<div class="empty-state empty-state--premium">' +
+        '<p class="empty-state__title">No roles match your criteria.</p>' +
+        '<p class="empty-state__body">Adjust filters or lower your threshold in Settings to see more jobs.</p>' +
+        "</div>";
       return;
     }
     container.classList.add("job-cards-grid");
@@ -177,6 +305,8 @@
     });
     var keywordEl = document.getElementById("filter-keyword");
     if (keywordEl) keywordEl.addEventListener("input", onFilterChange);
+    var thresholdEl = document.getElementById("filter-only-above-threshold");
+    if (thresholdEl) thresholdEl.addEventListener("change", onFilterChange);
 
     if (container) {
       container.addEventListener("click", function (e) {
@@ -235,7 +365,7 @@
       return;
     }
     container.innerHTML = '<div class="job-cards-grid">' +
-      savedJobs.map(function (j) { return renderJobCard(j, { savedPage: true }); }).join("") +
+      savedJobs.map(function (j) { return renderJobCard(j, { savedPage: true, hideMatchScore: true }); }).join("") +
       "</div>";
   }
 
@@ -275,8 +405,101 @@
     if (closeBtn) closeBtn.addEventListener("click", closeModal);
   }
 
+  function parsePreferencesForm() {
+    var roleEl = document.getElementById("pref-roleKeywords");
+    var locEl = document.getElementById("pref-preferredLocations");
+    var modeChecks = document.querySelectorAll('input[name="pref-preferredMode"]:checked');
+    var expEl = document.getElementById("pref-experienceLevel");
+    var skillsEl = document.getElementById("pref-skills");
+    var minEl = document.getElementById("pref-minMatchScore");
+    var roleStr = roleEl ? roleEl.value.trim() : "";
+    var roleKeywords = roleStr ? roleStr.split(",").map(function (s) { return s.trim(); }).filter(Boolean) : [];
+    var preferredLocations = [];
+    if (locEl && locEl.options) {
+      for (var i = 0; i < locEl.options.length; i++) {
+        if (locEl.options[i].selected) preferredLocations.push(locEl.options[i].value);
+      }
+    }
+    var preferredMode = [];
+    for (var m = 0; m < modeChecks.length; m++) preferredMode.push(modeChecks[m].value);
+    var skillsStr = skillsEl ? skillsEl.value.trim() : "";
+    var skills = skillsStr ? skillsStr.split(",").map(function (s) { return s.trim(); }).filter(Boolean) : [];
+    var minMatchScore = 40;
+    if (minEl) {
+      var v = parseInt(minEl.value, 10);
+      if (!isNaN(v)) minMatchScore = Math.max(0, Math.min(100, v));
+    }
+    return {
+      roleKeywords: roleKeywords,
+      preferredLocations: preferredLocations,
+      preferredMode: preferredMode,
+      experienceLevel: expEl ? expEl.value : "",
+      skills: skills,
+      minMatchScore: minMatchScore
+    };
+  }
+
+  function initSettings() {
+    var locSelect = document.getElementById("pref-preferredLocations");
+    if (locSelect) {
+      var locs = getUniqueLocations();
+      locs.forEach(function (loc) {
+        var opt = document.createElement("option");
+        opt.value = loc;
+        opt.textContent = loc;
+        locSelect.appendChild(opt);
+      });
+    }
+    var prefs = getPreferences();
+    if (prefs) {
+      var roleEl = document.getElementById("pref-roleKeywords");
+      if (roleEl) roleEl.value = (prefs.roleKeywords || []).join(", ");
+      var locEl = document.getElementById("pref-preferredLocations");
+      if (locEl) {
+        for (var i = 0; i < locEl.options.length; i++) {
+          locEl.options[i].selected = (prefs.preferredLocations || []).indexOf(locEl.options[i].value) !== -1;
+        }
+      }
+      var modeNames = prefs.preferredMode || [];
+      var modeChecks = document.querySelectorAll('input[name="pref-preferredMode"]');
+      for (var j = 0; j < modeChecks.length; j++) {
+        modeChecks[j].checked = modeNames.indexOf(modeChecks[j].value) !== -1;
+      }
+      var expEl = document.getElementById("pref-experienceLevel");
+      if (expEl) expEl.value = prefs.experienceLevel || "";
+      var skillsEl = document.getElementById("pref-skills");
+      if (skillsEl) skillsEl.value = (prefs.skills || []).join(", ");
+      var minEl = document.getElementById("pref-minMatchScore");
+      var minValEl = document.getElementById("pref-minMatchScore-value");
+      if (minEl) {
+        minEl.value = prefs.minMatchScore != null ? prefs.minMatchScore : 40;
+        if (minValEl) minValEl.textContent = minEl.value;
+      }
+    } else {
+      var minValEl = document.getElementById("pref-minMatchScore-value");
+      if (minValEl) minValEl.textContent = "40";
+    }
+    var minSlider = document.getElementById("pref-minMatchScore");
+    var minValDisplay = document.getElementById("pref-minMatchScore-value");
+    if (minSlider && minValDisplay) {
+      minSlider.addEventListener("input", function () {
+        minValDisplay.textContent = minSlider.value;
+      });
+    }
+    var saveBtn = document.getElementById("pref-save");
+    if (saveBtn) {
+      saveBtn.addEventListener("click", function () {
+        var prefsToSave = parsePreferencesForm();
+        setPreferences(prefsToSave);
+        saveBtn.textContent = "Saved";
+        setTimeout(function () { saveBtn.textContent = "Save preferences"; }, 1500);
+      });
+    }
+  }
+
   window.initDashboard = initDashboard;
   window.initSaved = initSaved;
+  window.initSettings = initSettings;
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", bindModalClose);

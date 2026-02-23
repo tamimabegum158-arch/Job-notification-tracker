@@ -45,35 +45,46 @@
     return (
       '<section class="route-content">' +
       '<h1 class="heading-1">What are you looking for?</h1>' +
-      '<p class="subtext">Tell us your preferences so we can match you to the right roles. Your answers are used only to personalize your feed.</p>' +
+      '<p class="subtext">Tell us your preferences so we can match you to the right roles. Saved to this device only.</p>' +
       '<div class="card settings-card" style="margin-top: var(--space-4); max-width: 560px;">' +
       '<div class="form-group">' +
-      '<label class="form-group__label" for="role-keywords">Role keywords</label>' +
-      '<input type="text" id="role-keywords" class="input" placeholder="e.g. Frontend, React, Product Manager" />' +
+      '<label class="form-group__label" for="pref-roleKeywords">Role keywords</label>' +
+      '<input type="text" id="pref-roleKeywords" class="input" placeholder="e.g. React, Frontend, Product Manager" />' +
       "</div>" +
       '<div class="form-group">' +
-      '<label class="form-group__label" for="locations">Preferred locations</label>' +
-      '<input type="text" id="locations" class="input" placeholder="e.g. New York, London, Remote" />' +
+      '<label class="form-group__label" for="pref-preferredLocations">Preferred locations</label>' +
+      '<select id="pref-preferredLocations" class="input select" multiple></select>' +
       "</div>" +
       '<div class="form-group">' +
-      '<label class="form-group__label" for="mode">Mode</label>' +
-      '<select id="mode" class="input select">' +
-      '<option value="">Select</option>' +
-      '<option value="remote">Remote</option>' +
-      '<option value="hybrid">Hybrid</option>' +
-      '<option value="onsite">Onsite</option>' +
+      '<span class="form-group__label">Preferred mode</span>' +
+      '<div class="checkbox-group">' +
+      '<label class="checkbox-group__item"><input type="checkbox" name="pref-preferredMode" value="Remote" /> Remote</label>' +
+      '<label class="checkbox-group__item"><input type="checkbox" name="pref-preferredMode" value="Hybrid" /> Hybrid</label>' +
+      '<label class="checkbox-group__item"><input type="checkbox" name="pref-preferredMode" value="Onsite" /> Onsite</label>' +
+      "</div>" +
+      "</div>" +
+      '<div class="form-group">' +
+      '<label class="form-group__label" for="pref-experienceLevel">Experience level</label>' +
+      '<select id="pref-experienceLevel" class="input select">' +
+      '<option value="">Any</option>' +
+      '<option value="Fresher">Fresher</option>' +
+      '<option value="0-1">0-1</option>' +
+      '<option value="1-3">1-3</option>' +
+      '<option value="3-5">3-5</option>' +
       "</select>" +
       "</div>" +
       '<div class="form-group">' +
-      '<label class="form-group__label" for="experience">Experience level</label>' +
-      '<select id="experience" class="input select">' +
-      '<option value="">Select</option>' +
-      '<option value="entry">Entry</option>' +
-      '<option value="mid">Mid</option>' +
-      '<option value="senior">Senior</option>' +
-      '<option value="lead">Lead</option>' +
-      "</select>" +
+      '<label class="form-group__label" for="pref-skills">Skills</label>' +
+      '<input type="text" id="pref-skills" class="input" placeholder="e.g. JavaScript, Python, SQL" />' +
       "</div>" +
+      '<div class="form-group">' +
+      '<label class="form-group__label" for="pref-minMatchScore">Minimum match score (0–100)</label>' +
+      '<div class="slider-group">' +
+      '<input type="range" id="pref-minMatchScore" min="0" max="100" value="40" />' +
+      '<p class="slider-group__value" id="pref-minMatchScore-value">40</p>' +
+      "</div>" +
+      "</div>" +
+      '<p style="margin-top: var(--space-3);"><button type="button" class="btn btn--primary" id="pref-save">Save preferences</button></p>' +
       "</div>" +
       "</section>"
     );
@@ -84,6 +95,7 @@
       '<section class="route-content">' +
       '<h1 class="heading-1">Dashboard</h1>' +
       '<p class="subtext">Your matched jobs in one place.</p>' +
+      '<div id="preferences-banner" class="preferences-banner" style="display: none;">Set your preferences to activate intelligent matching.</div>' +
       '<div class="filter-bar">' +
       '<div class="form-group form-group--search">' +
       '<label class="form-group__label" for="filter-keyword">Keyword</label>' +
@@ -114,9 +126,13 @@
       '<div class="form-group">' +
       '<label class="form-group__label" for="filter-sort">Sort</label>' +
       '<select id="filter-sort" class="input select">' +
-      '<option value="latest">Latest</option><option value="oldest">Oldest</option>' +
+      '<option value="latest">Latest</option><option value="oldest">Oldest</option><option value="match">Match Score</option><option value="salary">Salary</option>' +
       "</select>" +
       "</div>" +
+      "</div>" +
+      '<div class="dashboard-toggle">' +
+      '<input type="checkbox" id="filter-only-above-threshold" />' +
+      '<label for="filter-only-above-threshold">Show only jobs above my threshold</label>' +
       "</div>" +
       '<div id="job-cards-container" class="job-cards-grid"></div>' +
       "</section>"
@@ -185,6 +201,7 @@
       outlet.innerHTML = render ? render() : "";
       if (pathNorm === "/dashboard" && window.initDashboard) window.initDashboard();
       if (pathNorm === "/saved" && window.initSaved) window.initSaved();
+      if (pathNorm === "/settings" && window.initSettings) window.initSettings();
     } else {
       document.title = "Page Not Found — Job Notification Tracker";
       outlet.innerHTML = render404();
