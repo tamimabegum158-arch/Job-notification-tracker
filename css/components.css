@@ -1,0 +1,241 @@
+/**
+ * Component styles — buttons, inputs, cards, panels
+ * Same border radius everywhere. Subtle borders. No drop shadows.
+ */
+
+/* ─── Buttons ─── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--button-height);
+  padding: 0 var(--space-3);
+  font-family: var(--font-sans);
+  font-size: var(--text-body-size);
+  font-weight: 500;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background-color var(--transition-duration) var(--transition-ease),
+    border-color var(--transition-duration) var(--transition-ease),
+    color var(--transition-duration) var(--transition-ease);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.btn--primary {
+  background: var(--color-accent);
+  color: var(--color-bg);
+  border-color: var(--color-accent);
+}
+
+.btn--primary:hover {
+  background: #6d0000;
+  border-color: #6d0000;
+}
+
+.btn--secondary {
+  background: transparent;
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+.btn--secondary:hover {
+  border-color: var(--color-text);
+  opacity: 0.9;
+}
+
+.btn--secondary:disabled,
+.btn--primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ─── Inputs ─── */
+.input {
+  width: 100%;
+  min-height: var(--input-height);
+  padding: 0 var(--space-2);
+  font-family: var(--font-sans);
+  font-size: var(--text-body-size);
+  color: var(--color-text);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  transition: border-color var(--transition-duration) var(--transition-ease);
+}
+
+.input::placeholder {
+  color: var(--color-text);
+  opacity: 0.5;
+}
+
+.input:hover {
+  border-color: rgba(17, 17, 17, 0.2);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--color-border-focus);
+}
+
+.input--error {
+  border-color: var(--color-accent);
+}
+
+.textarea {
+  min-height: 120px;
+  padding: var(--space-2);
+  resize: vertical;
+}
+
+/* ─── Cards ─── */
+.card {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-3);
+  transition: border-color var(--transition-duration) var(--transition-ease);
+}
+
+.card:hover {
+  border-color: rgba(17, 17, 17, 0.18);
+}
+
+.card__title {
+  margin: 0 0 var(--space-2) 0;
+  font-size: var(--text-body-size-lg);
+  font-weight: 600;
+}
+
+.card__body {
+  margin: 0;
+  font-size: var(--text-body-size);
+  line-height: var(--line-height-body);
+}
+
+/* ─── Secondary panel: step explanation ─── */
+.panel-section {
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+}
+
+.panel-section__title {
+  font-size: var(--text-body-size);
+  font-weight: 600;
+  margin: 0 0 var(--space-2) 0;
+}
+
+.panel-section__body {
+  font-size: var(--text-body-size);
+  line-height: var(--line-height-body-lg);
+  margin: 0;
+  color: var(--color-text);
+  opacity: 0.9;
+}
+
+/* ─── Copyable prompt box ─── */
+.prompt-box {
+  position: relative;
+  padding: var(--space-2);
+  font-family: var(--font-sans);
+  font-size: var(--text-caption-size);
+  line-height: var(--line-height-body);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  color: var(--color-text);
+  overflow-x: auto;
+}
+
+.prompt-box__actions {
+  margin-top: var(--space-2);
+  display: flex;
+  gap: var(--space-1);
+}
+
+/* ─── Status badge (reusable) ─── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-caption-size);
+  font-weight: 500;
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+}
+
+.badge--success {
+  border-color: var(--color-success);
+  color: var(--color-success);
+}
+
+.badge--warning {
+  border-color: var(--color-warning);
+  color: var(--color-warning);
+}
+
+.badge--accent {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+/* ─── Error state ─── */
+.error-message {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+  font-size: var(--text-body-size);
+  line-height: var(--line-height-body);
+  color: var(--color-text);
+}
+
+.error-message__title {
+  font-weight: 600;
+  margin: 0 0 var(--space-1) 0;
+}
+
+.error-message__body {
+  margin: 0;
+  opacity: 0.9;
+}
+
+.error-message__action {
+  margin-top: var(--space-2);
+}
+
+/* ─── Empty state ─── */
+.empty-state {
+  padding: var(--space-4) var(--space-3);
+  text-align: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+}
+
+.empty-state__title {
+  font-size: var(--text-body-size-lg);
+  font-weight: 600;
+  margin: 0 0 var(--space-1) 0;
+}
+
+.empty-state__body {
+  margin: 0 0 var(--space-3) 0;
+  max-width: var(--text-max-width);
+  margin-left: auto;
+  margin-right: auto;
+  font-size: var(--text-body-size);
+  line-height: var(--line-height-body);
+  opacity: 0.9;
+}
+
+.empty-state__action {
+  margin-top: var(--space-2);
+}

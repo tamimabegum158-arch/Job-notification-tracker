@@ -1,0 +1,57 @@
+/**
+ * Job Notification App — Design Tokens
+ * Premium B2C design system. Calm, intentional, coherent.
+ * Do not add new values outside this scale.
+ */
+
+:root {
+  /* ─── Color (max 4 in use) ─── */
+  --color-bg: #F7F6F3;
+  --color-text: #111111;
+  --color-accent: #8B0000;
+  --color-success: #5c6b5c;
+  --color-warning: #8a7a5a;
+
+  /* Borders and dividers (derived from text, low opacity) */
+  --color-border: rgba(17, 17, 17, 0.12);
+  --color-border-focus: #8B0000;
+
+  /* ─── Typography ─── */
+  --font-serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --font-sans: "Source Sans 3", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  --text-heading-size: 2rem;
+  --text-heading-size-lg: 2.5rem;
+  --text-body-size: 1.0625rem;
+  --text-body-size-lg: 1.125rem;
+  --text-caption-size: 0.875rem;
+
+  --line-height-tight: 1.35;
+  --line-height-body: 1.6;
+  --line-height-body-lg: 1.8;
+
+  --text-max-width: 720px;
+  --letter-spacing-heading: -0.02em;
+
+  /* ─── Spacing scale (only these values) ─── */
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 40px;
+  --space-5: 64px;
+
+  /* ─── Layout ─── */
+  --layout-workspace-ratio: 70%;
+  --layout-panel-ratio: 30%;
+  --layout-topbar-height: 56px;
+  --layout-content-max-width: 1200px;
+
+  /* ─── Components ─── */
+  --radius: 6px;
+  --input-height: 44px;
+  --button-height: 44px;
+
+  /* ─── Interaction ─── */
+  --transition-duration: 180ms;
+  --transition-ease: ease-in-out;
+}
