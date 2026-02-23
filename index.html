@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Job Notification App — Design System</title>
+  <title>Job Notification App</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600&family=Source+Serif+4:wght@400;600&display=swap" rel="stylesheet" />
@@ -11,61 +11,34 @@
 </head>
 <body>
   <div class="app-shell">
-    <!-- Top Bar -->
     <header class="top-bar">
       <span class="top-bar__name">Job Notification App</span>
-      <span class="top-bar__progress">Step 1 / 4</span>
-      <span class="top-bar__status">In Progress</span>
+      <nav class="top-bar__nav" aria-label="Main">
+        <a class="top-bar__link" href="/dashboard" data-route="/dashboard">Dashboard</a>
+        <a class="top-bar__link" href="/saved" data-route="/saved">Saved</a>
+        <a class="top-bar__link" href="/digest" data-route="/digest">Digest</a>
+        <a class="top-bar__link" href="/settings" data-route="/settings">Settings</a>
+        <a class="top-bar__link" href="/proof" data-route="/proof">Proof</a>
+      </nav>
+      <button type="button" class="top-bar__menu-btn" id="nav-menu-btn" aria-expanded="false" aria-label="Open menu">
+        <span class="top-bar__menu-btn-icon" aria-hidden="true"></span>
+      </button>
+      <div class="nav-dropdown" id="nav-dropdown" aria-hidden="true">
+        <a class="top-bar__link" href="/dashboard" data-route="/dashboard">Dashboard</a>
+        <a class="top-bar__link" href="/saved" data-route="/saved">Saved</a>
+        <a class="top-bar__link" href="/digest" data-route="/digest">Digest</a>
+        <a class="top-bar__link" href="/settings" data-route="/settings">Settings</a>
+        <a class="top-bar__link" href="/proof" data-route="/proof">Proof</a>
+      </div>
     </header>
 
-    <!-- Context Header -->
-    <section class="context-header">
-      <h1 class="heading-1">Design system foundation</h1>
-      <p class="subtext">Layout, tokens, and components. No product features yet.</p>
-    </section>
-
-    <!-- Main: Workspace + Panel -->
-    <main class="main-content">
-      <div class="primary-workspace">
-        <div class="card" style="margin-bottom: var(--space-3);">
-          <h3 class="card__title">Primary workspace</h3>
-          <p class="card__body">Clean cards, predictable components, subtle borders. No crowding, no heavy shadows.</p>
-        </div>
-        <div class="card">
-          <h3 class="card__title">Another card</h3>
-          <p class="card__body">Same radius and border treatment everywhere for a cohesive feel.</p>
-        </div>
-      </div>
-
-      <aside class="secondary-panel">
-        <div class="panel-section">
-          <h3 class="panel-section__title">Step explanation</h3>
-          <p class="panel-section__body">Use this area for step copy, hints, or copyable prompts. Keep it clear and purposeful.</p>
-        </div>
-        <div class="panel-section">
-          <h3 class="panel-section__title">Copyable prompt</h3>
-          <div class="prompt-box">
-            <code>Your prompt or snippet appears here. User can copy in one click.</code>
-            <div class="prompt-box__actions">
-              <button type="button" class="btn btn--primary">Copy</button>
-              <button type="button" class="btn btn--secondary">Clear</button>
-            </div>
-          </div>
-        </div>
-      </aside>
+    <main id="route-outlet">
+      <section class="route-content">
+        <h1 class="heading-1">Dashboard</h1>
+        <p class="subtext">This section will be built in the next step.</p>
+      </section>
     </main>
-
-    <!-- Proof Footer -->
-    <footer class="proof-footer">
-      <div class="proof-footer__inner">
-        <ul class="proof-footer__list">
-          <li class="proof-footer__item"><span class="proof-footer__checkbox" aria-hidden="true"></span> UI Built</li>
-          <li class="proof-footer__item"><span class="proof-footer__checkbox" aria-hidden="true"></span> Logic Working</li>
-          <li class="proof-footer__item"><span class="proof-footer__checkbox" aria-hidden="true"></span> Test Passed</li>
-          <li class="proof-footer__item"><span class="proof-footer__checkbox" aria-hidden="true"></span> Deployed</li>
-        </ul>
-      </div>
-    </footer>
   </div>
+  <script src="js/router.js"></script>
 </body>
 </html>
