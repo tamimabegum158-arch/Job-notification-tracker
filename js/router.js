@@ -84,10 +84,41 @@
       '<section class="route-content">' +
       '<h1 class="heading-1">Dashboard</h1>' +
       '<p class="subtext">Your matched jobs in one place.</p>' +
-      '<div class="empty-state empty-state--premium" style="margin-top: var(--space-4);">' +
-      '<p class="empty-state__title">No jobs yet</p>' +
-      '<p class="empty-state__body">Once you set your preferences and we load your feed, precision-matched roles will appear here. No clutter—only roles that fit.</p>' +
+      '<div class="filter-bar">' +
+      '<div class="form-group form-group--search">' +
+      '<label class="form-group__label" for="filter-keyword">Keyword</label>' +
+      '<input type="text" id="filter-keyword" class="input" placeholder="Title or company" />' +
       "</div>" +
+      '<div class="form-group">' +
+      '<label class="form-group__label" for="filter-location">Location</label>' +
+      '<select id="filter-location" class="input select"><option value="">All</option></select>' +
+      "</div>" +
+      '<div class="form-group">' +
+      '<label class="form-group__label" for="filter-mode">Mode</label>' +
+      '<select id="filter-mode" class="input select">' +
+      '<option value="">All</option><option value="Remote">Remote</option><option value="Hybrid">Hybrid</option><option value="Onsite">Onsite</option>' +
+      "</select>" +
+      "</div>" +
+      '<div class="form-group">' +
+      '<label class="form-group__label" for="filter-experience">Experience</label>' +
+      '<select id="filter-experience" class="input select">' +
+      '<option value="">All</option><option value="Fresher">Fresher</option><option value="0-1">0-1</option><option value="1-3">1-3</option><option value="3-5">3-5</option>' +
+      "</select>" +
+      "</div>" +
+      '<div class="form-group">' +
+      '<label class="form-group__label" for="filter-source">Source</label>' +
+      '<select id="filter-source" class="input select">' +
+      '<option value="">All</option><option value="LinkedIn">LinkedIn</option><option value="Naukri">Naukri</option><option value="Indeed">Indeed</option>' +
+      "</select>" +
+      "</div>" +
+      '<div class="form-group">' +
+      '<label class="form-group__label" for="filter-sort">Sort</label>' +
+      '<select id="filter-sort" class="input select">' +
+      '<option value="latest">Latest</option><option value="oldest">Oldest</option>' +
+      "</select>" +
+      "</div>" +
+      "</div>" +
+      '<div id="job-cards-container" class="job-cards-grid"></div>' +
       "</section>"
     );
   }
@@ -97,10 +128,7 @@
       '<section class="route-content">' +
       '<h1 class="heading-1">Saved</h1>' +
       '<p class="subtext">Jobs you want to revisit later.</p>' +
-      '<div class="empty-state empty-state--premium" style="margin-top: var(--space-4);">' +
-      '<p class="empty-state__title">No saved jobs yet</p>' +
-      '<p class="empty-state__body">Save any job from your dashboard to find it here. Useful when you want to compare a few roles or apply later.</p>' +
-      "</div>" +
+      '<div id="saved-jobs-container"></div>' +
       "</section>"
     );
   }
@@ -155,6 +183,8 @@
       document.title = route.title + " — Job Notification Tracker";
       var render = RENDER[pathNorm];
       outlet.innerHTML = render ? render() : "";
+      if (pathNorm === "/dashboard" && window.initDashboard) window.initDashboard();
+      if (pathNorm === "/saved" && window.initSaved) window.initSaved();
     } else {
       document.title = "Page Not Found — Job Notification Tracker";
       outlet.innerHTML = render404();

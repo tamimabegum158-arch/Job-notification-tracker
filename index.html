@@ -41,7 +41,21 @@
         <p class="landing__cta"><a href="/settings" class="btn btn--primary">Start Tracking</a></p>
       </section>
     </main>
+    <div id="job-modal-overlay" class="modal-overlay" aria-hidden="true">
+      <div class="modal" id="job-modal" role="dialog" aria-modal="true" aria-labelledby="job-modal-title">
+        <h2 id="job-modal-title" class="modal__title"></h2>
+        <p class="modal__company" id="job-modal-company"></p>
+        <div class="modal__section"><span class="modal__label">Description</span><p class="modal__body" id="job-modal-desc"></p></div>
+        <div class="modal__section"><span class="modal__label">Skills</span><div class="modal__skills" id="job-modal-skills"></div></div>
+        <div class="modal__actions">
+          <button type="button" class="btn btn--primary btn--small" id="job-modal-apply">Apply</button>
+          <button type="button" class="btn btn--secondary btn--small modal__close" id="job-modal-close">Close</button>
+        </div>
+      </div>
+    </div>
   </div>
+  <script src="js/jobs-data.js"></script>
   <script src="js/router.js"></script>
+  <script src="js/dashboard.js"></script>
 </body>
 </html>
