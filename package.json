@@ -1,0 +1,9 @@
+{
+  "name": "job-notification-tracker",
+  "version": "1.0.0",
+  "description": "Track job postings and send notifications",
+  "scripts": {
+    "start": "npx serve -l 3000",
+    "run": "npx serve -l 3000"
+  }
+}
