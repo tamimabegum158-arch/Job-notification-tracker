@@ -5,6 +5,56 @@
 (function () {
   var STORAGE_KEY = "job-notification-tracker-saved";
   var PREFERENCES_KEY = "jobTrackerPreferences";
+  var STATUS_KEY = "jobTrackerStatus";
+  var STATUS_LOG_KEY = "jobTrackerStatusLog";
+  var VALID_STATUSES = ["Not Applied", "Applied", "Rejected", "Selected"];
+
+  function getStatusMap() {
+    try {
+      var raw = localStorage.getItem(STATUS_KEY);
+      if (!raw) return {};
+      var o = JSON.parse(raw);
+      return o && typeof o === "object" ? o : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function getStatus(jobId) {
+    var map = getStatusMap();
+    var s = map[jobId];
+    if (VALID_STATUSES.indexOf(s) !== -1) return s;
+    return "Not Applied";
+  }
+
+  function setStatus(jobId, status) {
+    if (VALID_STATUSES.indexOf(status) === -1) return;
+    var map = getStatusMap();
+    map[jobId] = status;
+    try {
+      localStorage.setItem(STATUS_KEY, JSON.stringify(map));
+    } catch (e) {}
+  }
+
+  function getStatusLog() {
+    try {
+      var raw = localStorage.getItem(STATUS_LOG_KEY);
+      if (!raw) return [];
+      var arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function appendStatusLog(jobId, status) {
+    var log = getStatusLog();
+    log.push({ jobId: jobId, status: status, changedAt: new Date().toISOString() });
+    if (log.length > 100) log = log.slice(-100);
+    try {
+      localStorage.setItem(STATUS_LOG_KEY, JSON.stringify(log));
+    } catch (e) {}
+  }
 
   function defaultPreferences() {
     return {
@@ -213,6 +263,10 @@
       if (filters.mode && j.mode !== filters.mode) return false;
       if (filters.experience && j.experience !== filters.experience) return false;
       if (filters.source && j.source !== filters.source) return false;
+      if (filters.status) {
+        var jobStatus = getStatus(j.id);
+        if (jobStatus !== filters.status) return false;
+      }
       return true;
     });
     prefs = prefs || getPreferences();
@@ -246,6 +300,7 @@
     var sourceEl = document.getElementById("filter-source");
     var sortEl = document.getElementById("filter-sort");
     var thresholdEl = document.getElementById("filter-only-above-threshold");
+    var statusEl = document.getElementById("filter-status");
     return {
       keyword: keywordEl ? keywordEl.value : "",
       location: locationEl ? locationEl.value : "",
@@ -253,7 +308,8 @@
       experience: experienceEl ? experienceEl.value : "",
       source: sourceEl ? sourceEl.value : "",
       sort: sortEl ? sortEl.value : "latest",
-      onlyAboveThreshold: thresholdEl ? thresholdEl.checked : false
+      onlyAboveThreshold: thresholdEl ? thresholdEl.checked : false,
+      status: statusEl ? statusEl.value : ""
     };
   }
 
@@ -279,6 +335,13 @@
     return "badge badge--match-low";
   }
 
+  function statusBadgeClass(status) {
+    if (status === "Applied") return "job-card__status-btn job-card__status-btn--applied";
+    if (status === "Rejected") return "job-card__status-btn job-card__status-btn--rejected";
+    if (status === "Selected") return "job-card__status-btn job-card__status-btn--selected";
+    return "job-card__status-btn job-card__status-btn--neutral";
+  }
+
   function renderJobCard(job, options) {
     options = options || {};
     var savedIds = getSavedIds();
@@ -288,12 +351,18 @@
     var meta = [job.location, job.mode, job.experience].filter(Boolean).join(" · ") || "—";
     var score = job._matchScore != null ? job._matchScore : 0;
     var scoreBadge = options.hideMatchScore ? "" : ('<span class="' + matchScoreBadgeClass(score) + '">' + score + "% match</span>");
+    var currentStatus = getStatus(job.id);
+    var statusBtns = VALID_STATUSES.map(function (s) {
+      var active = s === currentStatus ? " job-card__status-btn--active" : "";
+      return '<button type="button" class="' + statusBadgeClass(s) + active + '" data-action="status" data-status="' + escapeHtml(s) + '">' + escapeHtml(s) + "</button>";
+    }).join("");
     return (
       '<div class="job-card" data-job-id="' + escapeHtml(job.id) + '">' +
       '<p class="job-card__title">' + escapeHtml(job.title) + "</p>" +
       '<p class="job-card__company">' + escapeHtml(job.company) + "</p>" +
       '<p class="job-card__meta">' + escapeHtml(meta) + "</p>" +
       '<p class="job-card__salary">' + escapeHtml(job.salaryRange || "—") + "</p>" +
+      '<div class="job-card__status-group">' + statusBtns + "</div>" +
       '<div class="job-card__footer">' +
       scoreBadge +
       '<span class="badge">' + escapeHtml(job.source || "—") + "</span>" +
@@ -339,6 +408,23 @@
     }
   }
 
+  function showToast(message) {
+    var container = document.getElementById("toast-container");
+    if (!container) {
+      container = document.createElement("div");
+      container.id = "toast-container";
+      container.setAttribute("aria-live", "polite");
+      document.body.appendChild(container);
+    }
+    var toast = document.createElement("div");
+    toast.className = "toast";
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(function () {
+      if (toast.parentNode) toast.parentNode.removeChild(toast);
+    }, 3000);
+  }
+
   function refreshDashboardCards() {
     var container = document.getElementById("job-cards-container");
     var banner = document.getElementById("preferences-banner");
@@ -366,7 +452,7 @@
     var container = document.getElementById("job-cards-container");
     var overlay = document.getElementById("job-modal-overlay");
     var closeBtn = document.getElementById("job-modal-close");
-    var filterIds = ["filter-keyword", "filter-location", "filter-mode", "filter-experience", "filter-source", "filter-sort"];
+    var filterIds = ["filter-keyword", "filter-location", "filter-mode", "filter-experience", "filter-source", "filter-sort", "filter-status"];
 
     function onFilterChange() {
       refreshDashboardCards();
@@ -380,6 +466,28 @@
     if (keywordEl) keywordEl.addEventListener("input", onFilterChange);
     var thresholdEl = document.getElementById("filter-only-above-threshold");
     if (thresholdEl) thresholdEl.addEventListener("change", onFilterChange);
+    var clearBtn = document.getElementById("filter-clear");
+    if (clearBtn) {
+      clearBtn.addEventListener("click", function () {
+        var keywordEl = document.getElementById("filter-keyword");
+        var locationEl = document.getElementById("filter-location");
+        var modeEl = document.getElementById("filter-mode");
+        var experienceEl = document.getElementById("filter-experience");
+        var sourceEl = document.getElementById("filter-source");
+        var sortEl = document.getElementById("filter-sort");
+        var statusEl = document.getElementById("filter-status");
+        var thresholdEl = document.getElementById("filter-only-above-threshold");
+        if (keywordEl) keywordEl.value = "";
+        if (locationEl) locationEl.value = "";
+        if (modeEl) modeEl.value = "";
+        if (experienceEl) experienceEl.value = "";
+        if (sourceEl) sourceEl.value = "";
+        if (sortEl) sortEl.value = "latest";
+        if (statusEl) statusEl.value = "";
+        if (thresholdEl) thresholdEl.checked = false;
+        refreshDashboardCards();
+      });
+    }
 
     if (container) {
       container.addEventListener("click", function (e) {
@@ -402,6 +510,16 @@
           }
         } else if (action === "apply") {
           if (job.applyUrl) window.open(job.applyUrl, "_blank", "noopener");
+        } else if (action === "status") {
+          var newStatus = btn.getAttribute("data-status");
+          if (newStatus && VALID_STATUSES.indexOf(newStatus) !== -1) {
+            setStatus(jobId, newStatus);
+            appendStatusLog(jobId, newStatus);
+            if (newStatus === "Applied" || newStatus === "Rejected" || newStatus === "Selected") {
+              showToast("Status updated: " + newStatus);
+            }
+            refreshDashboardCards();
+          }
         }
       });
     }
@@ -462,6 +580,16 @@
         renderSavedContent();
       } else if (action === "apply") {
         if (job.applyUrl) window.open(job.applyUrl, "_blank", "noopener");
+      } else if (action === "status") {
+        var newStatus = btn.getAttribute("data-status");
+        if (newStatus && VALID_STATUSES.indexOf(newStatus) !== -1) {
+          setStatus(jobId, newStatus);
+          appendStatusLog(jobId, newStatus);
+          if (newStatus === "Applied" || newStatus === "Rejected" || newStatus === "Selected") {
+            showToast("Status updated: " + newStatus);
+          }
+          renderSavedContent();
+        }
       }
     });
   }
@@ -570,6 +698,45 @@
     }
   }
 
+  function formatStatusChangeDate(isoString) {
+    try {
+      var d = new Date(isoString);
+      if (isNaN(d.getTime())) return isoString;
+      var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      return months[d.getMonth()] + " " + d.getDate() + ", " + d.getFullYear();
+    } catch (e) {
+      return isoString;
+    }
+  }
+
+  function renderRecentStatusUpdates() {
+    var log = getStatusLog();
+    if (!log.length) return "";
+    var jobs = getJobs();
+    var recent = log.slice(-20).reverse().slice(0, 10);
+    var rows = recent.map(function (entry) {
+      var job = jobs.filter(function (j) { return j.id === entry.jobId; })[0];
+      var title = job ? job.title : "—";
+      var company = job ? job.company : "—";
+      var status = entry.status || "—";
+      var dateStr = formatStatusChangeDate(entry.changedAt || "");
+      return (
+        '<div class="status-update-item">' +
+        '<span class="status-update-item__title">' + escapeHtml(title) + "</span>" +
+        '<span class="status-update-item__company">' + escapeHtml(company) + "</span>" +
+        '<span class="status-update-item__status status-update-item__status--' + (status.toLowerCase().replace(" ", "-")) + '">' + escapeHtml(status) + "</span>" +
+        '<span class="status-update-item__date">' + escapeHtml(dateStr) + "</span>" +
+        "</div>"
+      );
+    }).join("");
+    return (
+      '<div class="digest-status-updates">' +
+      '<h2 class="digest-status-updates__title">Recent Status Updates</h2>' +
+      '<div class="digest-status-updates__list">' + rows + "</div>" +
+      "</div>"
+    );
+  }
+
   function buildDigestPlainText(data) {
     if (!data || !data.jobs || !data.jobs.length) return "";
     var lines = ["Top 10 Jobs For You — 9AM Digest", data.dateLabel || data.date, ""];
@@ -628,8 +795,10 @@
     var digestData = null;
 
     function updateUI() {
+      var statusSection = renderRecentStatusUpdates();
       if (digestData && digestData.jobs && digestData.jobs.length > 0) {
         root.innerHTML = '<div class="digest-block">' +
+          (statusSection ? statusSection : "") +
           '<button type="button" class="btn btn--primary" id="digest-generate">Generate Today\'s 9AM Digest (Simulated)</button>' +
           '<div id="digest-content">' + renderDigestContent(digestData) + "</div>" +
           "</div>";
@@ -653,6 +822,7 @@
       }
       if (digestData && digestData.jobs && digestData.jobs.length === 0) {
         root.innerHTML = '<div class="digest-block">' +
+          (statusSection ? statusSection : "") +
           '<button type="button" class="btn btn--primary" id="digest-generate">Generate Today\'s 9AM Digest (Simulated)</button>' +
           '<div class="empty-state empty-state--premium" style="margin-top: var(--space-3);">' +
           '<p class="empty-state__title">No matching roles today.</p>' +
@@ -660,6 +830,7 @@
           "</div></div>";
       } else {
         root.innerHTML = '<div class="digest-block">' +
+          (statusSection ? statusSection : "") +
           '<button type="button" class="btn btn--primary" id="digest-generate">Generate Today\'s 9AM Digest (Simulated)</button>' +
           '<div id="digest-content"></div></div>';
       }

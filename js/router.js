@@ -129,6 +129,13 @@
       '<option value="latest">Latest</option><option value="oldest">Oldest</option><option value="match">Match Score</option><option value="salary">Salary</option>' +
       "</select>" +
       "</div>" +
+      '<div class="form-group">' +
+      '<label class="form-group__label" for="filter-status">Status</label>' +
+      '<select id="filter-status" class="input select">' +
+      '<option value="">All</option><option value="Not Applied">Not Applied</option><option value="Applied">Applied</option><option value="Rejected">Rejected</option><option value="Selected">Selected</option>' +
+      "</select>" +
+      "</div>" +
+      '<div class="filter-bar__actions"><button type="button" class="btn btn--secondary btn--small" id="filter-clear">Clear filters</button></div>' +
       "</div>" +
       '<div class="dashboard-toggle">' +
       '<input type="checkbox" id="filter-only-above-threshold" />' +
