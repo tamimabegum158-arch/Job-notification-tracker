@@ -1,16 +1,16 @@
 /**
- * Minimal client-side router. No full page reloads. Active link click = no-op.
+ * Job Notification Tracker — client-side router.
+ * No full page reloads. Active link click = no-op. In-app links use SPA navigation.
  */
 
 (function () {
-  var PLACEHOLDER_SUBTEXT = "This section will be built in the next step.";
   var ROUTES = {
-    "/": { title: "Home", heading: "Home" },
-    "/dashboard": { title: "Dashboard", heading: "Dashboard" },
-    "/settings": { title: "Settings", heading: "Settings" },
-    "/saved": { title: "Saved", heading: "Saved" },
-    "/digest": { title: "Digest", heading: "Digest" },
-    "/proof": { title: "Proof", heading: "Proof" }
+    "/": { title: "Home" },
+    "/dashboard": { title: "Dashboard" },
+    "/settings": { title: "Settings" },
+    "/saved": { title: "Saved" },
+    "/digest": { title: "Digest" },
+    "/proof": { title: "Proof" }
   };
 
   function getPath() {
@@ -21,11 +21,103 @@
     return ROUTES[path] || null;
   }
 
-  function renderPlaceholder(data) {
+  function escapeHtml(s) {
+    var div = document.createElement("div");
+    div.textContent = s;
+    return div.innerHTML;
+  }
+
+  function renderLanding() {
+    return (
+      '<section class="route-content landing">' +
+      '<h1 class="heading-1">Stop Missing The Right Jobs.</h1>' +
+      '<p class="subtext">Precision-matched job discovery delivered daily at 9AM.</p>' +
+      '<p class="landing__cta">' +
+      '<a href="/settings" class="btn btn--primary">Start Tracking</a>' +
+      "</p>" +
+      "</section>"
+    );
+  }
+
+  function renderSettings() {
     return (
       '<section class="route-content">' +
-      '<h1 class="heading-1">' + escapeHtml(data.heading) + "</h1>" +
-      '<p class="subtext">' + escapeHtml(data.subtext) + "</p>" +
+      '<h1 class="heading-1">Settings</h1>' +
+      '<p class="subtext">Set your preferences below. No logic or saving yet.</p>' +
+      '<div class="card" style="margin-top: var(--space-4); max-width: 560px;">' +
+      '<div class="form-group">' +
+      '<label class="form-group__label" for="role-keywords">Role keywords</label>' +
+      '<input type="text" id="role-keywords" class="input" placeholder="e.g. Frontend, React, Product Manager" />' +
+      "</div>" +
+      '<div class="form-group">' +
+      '<label class="form-group__label" for="locations">Preferred locations</label>' +
+      '<input type="text" id="locations" class="input" placeholder="e.g. New York, London, Remote" />' +
+      "</div>" +
+      '<div class="form-group">' +
+      '<label class="form-group__label" for="mode">Mode</label>' +
+      '<select id="mode" class="input select">' +
+      '<option value="">Select</option>' +
+      '<option value="remote">Remote</option>' +
+      '<option value="hybrid">Hybrid</option>' +
+      '<option value="onsite">Onsite</option>' +
+      "</select>" +
+      "</div>" +
+      '<div class="form-group">' +
+      '<label class="form-group__label" for="experience">Experience level</label>' +
+      '<select id="experience" class="input select">' +
+      '<option value="">Select</option>' +
+      '<option value="entry">Entry</option>' +
+      '<option value="mid">Mid</option>' +
+      '<option value="senior">Senior</option>' +
+      '<option value="lead">Lead</option>' +
+      "</select>" +
+      "</div>" +
+      "</div>" +
+      "</section>"
+    );
+  }
+
+  function renderDashboard() {
+    return (
+      '<section class="route-content">' +
+      '<h1 class="heading-1">Dashboard</h1>' +
+      '<div class="empty-state" style="margin-top: var(--space-4);">' +
+      '<p class="empty-state__title">No jobs yet.</p>' +
+      '<p class="empty-state__body">In the next step, you will load a realistic dataset.</p>' +
+      "</div>" +
+      "</section>"
+    );
+  }
+
+  function renderSaved() {
+    return (
+      '<section class="route-content">' +
+      '<h1 class="heading-1">Saved</h1>' +
+      '<div class="empty-state" style="margin-top: var(--space-4);">' +
+      '<p class="empty-state__title">No saved jobs</p>' +
+      '<p class="empty-state__body">Jobs you save for later will appear here.</p>' +
+      "</div>" +
+      "</section>"
+    );
+  }
+
+  function renderDigest() {
+    return (
+      '<section class="route-content">' +
+      '<h1 class="heading-1">Digest</h1>' +
+      '<div class="empty-state" style="margin-top: var(--space-4);">' +
+      '<p class="empty-state__title">Daily summary</p>' +
+      '<p class="empty-state__body">Your daily job digest will be available here. This feature will be built in a later step.</p>' +
+      "</div>" +
+      "</section>"
+    );
+  }
+
+  function renderProof() {
+    return (
+      '<section class="route-content">' +
+      '<h1 class="heading-1">Proof</h1>' +
+      '<p class="subtext">Placeholder for artifact collection. This section will be built in the next step.</p>' +
       "</section>"
     );
   }
@@ -39,11 +131,14 @@
     );
   }
 
-  function escapeHtml(s) {
-    var div = document.createElement("div");
-    div.textContent = s;
-    return div.innerHTML;
-  }
+  var RENDER = {
+    "/": renderLanding,
+    "/dashboard": renderDashboard,
+    "/settings": renderSettings,
+    "/saved": renderSaved,
+    "/digest": renderDigest,
+    "/proof": renderProof
+  };
 
   function updatePage(path) {
     var pathNorm = path === "" ? "/" : path;
@@ -52,13 +147,11 @@
     if (!outlet) return;
 
     if (route) {
-      document.title = route.title + " — Job Notification App";
-      outlet.innerHTML = renderPlaceholder({
-        heading: route.heading,
-        subtext: PLACEHOLDER_SUBTEXT
-      });
+      document.title = route.title + " — Job Notification Tracker";
+      var render = RENDER[pathNorm];
+      outlet.innerHTML = render ? render() : "";
     } else {
-      document.title = "Page Not Found — Job Notification App";
+      document.title = "Page Not Found — Job Notification Tracker";
       outlet.innerHTML = render404();
     }
   }
@@ -88,6 +181,16 @@
     }
   }
 
+  function navigateTo(path, e) {
+    if (e) e.preventDefault();
+    var pathNorm = path === "" ? "/" : path;
+    var href = pathNorm === "/" ? "/" : pathNorm;
+    window.history.pushState({ path: pathNorm }, "", href);
+    setActiveLink(pathNorm);
+    updatePage(pathNorm);
+    closeMobileMenu();
+  }
+
   function handleNavClick(e) {
     var link = e.target.closest('.top-bar__link[data-route][href]');
     if (!link) return;
@@ -103,16 +206,19 @@
     }
 
     e.preventDefault();
-    window.history.pushState({ path: path }, "", href);
-    setActiveLink(path);
-    updatePage(path);
-    closeMobileMenu();
+    navigateTo(path, null);
   }
 
-  function handlePopState() {
-    var path = getPath();
-    setActiveLink(path);
-    updatePage(path);
+  function handleInAppLink(e) {
+    var link = e.target.closest('a[href^="/"]');
+    if (!link || link.closest(".top-bar__nav") || link.closest(".nav-dropdown")) return;
+
+    var href = link.getAttribute("href");
+    if (href === "#" || href.indexOf("//") !== -1) return;
+
+    var path = href.replace(/\/$/, "") || "/";
+    e.preventDefault();
+    navigateTo(path, null);
   }
 
   function initMenuButton() {
@@ -135,6 +241,8 @@
     document.addEventListener("click", function (e) {
       if (e.target.closest(".top-bar__nav") || e.target.closest(".nav-dropdown")) {
         handleNavClick(e);
+      } else {
+        handleInAppLink(e);
       }
     });
 

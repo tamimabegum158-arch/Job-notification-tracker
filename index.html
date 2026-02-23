@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Job Notification App</title>
+  <title>Job Notification Tracker</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600&family=Source+Serif+4:wght@400;600&display=swap" rel="stylesheet" />
@@ -12,7 +12,7 @@
 <body>
   <div class="app-shell">
     <header class="top-bar">
-      <span class="top-bar__name">Job Notification App</span>
+      <a class="top-bar__name top-bar__name--link" href="/" data-route="/">Job Notification Tracker</a>
       <nav class="top-bar__nav" aria-label="Main">
         <a class="top-bar__link" href="/dashboard" data-route="/dashboard">Dashboard</a>
         <a class="top-bar__link" href="/saved" data-route="/saved">Saved</a>
@@ -33,9 +33,10 @@
     </header>
 
     <main id="route-outlet">
-      <section class="route-content">
-        <h1 class="heading-1">Dashboard</h1>
-        <p class="subtext">This section will be built in the next step.</p>
+      <section class="route-content landing">
+        <h1 class="heading-1">Stop Missing The Right Jobs.</h1>
+        <p class="subtext">Precision-matched job discovery delivered daily at 9AM.</p>
+        <p class="landing__cta"><a href="/settings" class="btn btn--primary">Start Tracking</a></p>
       </section>
     </main>
   </div>
